@@ -7,7 +7,7 @@ from datetime import datetime
 # 1. 之前那個 CSV 下載網址
 CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSum58yVAkFdh7baIrQ0PnrYys2FnSp4xGbG-oiAILDztPH6MDEtc4-q2fiijT3hO4PfvhUOjcaHkF5/pub?output=csv" 
 # 2. 剛剛拿到的 Apps Script 網址
-GAS_URL = "https://script.google.com/macros/library/d/18sJtQ39Q1VHufwJxDUvjHv-eTP_i5cRio68JH5k293AweQ7gKnlEiEov/3"
+GAS_URL = "https://script.google.com/macros/s/AKfycbwEQeec3tnCHRBDGrYfSVLwWDv3xpTr-V0H6QxZOfd_aKeuqfAEu9pu4GEhYsRM3yU8/exec"
 
 st.set_page_config(page_title="列印金庫-終極版", layout="centered")
 st.title("🖨️ 列印金庫 (一鍵儲值)")
