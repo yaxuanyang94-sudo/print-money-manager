@@ -1,48 +1,43 @@
 import streamlit as st
+from streamlit_gsheets import GSheetsConnection
 import pandas as pd
-from datetime import datetime
 
-# --- 設定區 ---
-# 請在這裡貼上你的 Google 試算表網址
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1ueZBzNShwS-szB7zUU2bAeEp7v2X2ZQszm2FqYJA6fE/edit?usp=sharing"
-# 將網址轉換為 CSV 下載格式
-CSV_URL = SHEET_URL.replace("/edit?usp=sharing", "/export?format=csv").replace("/edit#gid=0", "/export?format=csv")
+st.set_page_config(page_title="列印金庫-全自動版", layout="centered")
+st.title("🖨️ 列印金庫 (一鍵存檔)")
 
-st.set_page_config(page_title="列印金庫-永久儲存版", layout="centered")
-st.title("🖨️ 列印金庫 (資料已連動)")
+# 建立 Google Sheets 連線
+conn = st.connection("gsheets", type=GSheetsConnection)
 
-# 從 Google Sheets 讀取資料
-def load_data():
-    try:
-        # 加上 timestamp 防止快取
-        df = pd.read_csv(f"{CSV_URL}&t={datetime.now().timestamp()}")
-        return df
-    except:
-        st.error("讀取資料失敗，請檢查試算表權限是否已開啟「編輯者」給任何人。")
-        return pd.DataFrame(columns=["姓名", "餘額"])
+# 讀取現有資料
+df = conn.read(ttl="0s") # ttl=0s 確保每次都讀最新資料
 
-df = load_data()
-
-# --- 側邊欄：即時餘額顯示 ---
+# --- 側邊欄：顯示餘額 ---
 st.sidebar.header("💰 目前餘額")
-if not df.empty:
-    for index, row in df.iterrows():
-        st.sidebar.metric(label=row["姓名"], value=f"${row['餘額']:.1f}")
+for index, row in df.iterrows():
+    st.sidebar.metric(label=row["姓名"], value=f"${row['餘額']:.1f}")
 
 # --- 主畫面 ---
 tab1, tab2 = st.tabs(["📉 扣款", "💰 儲值"])
 
 with tab1:
-    user = st.selectbox("選擇扣款人", df["姓名"].tolist() if not df.empty else [])
-    amount = st.number_input("扣除金額", min_value=0.0, step=0.1, format="%.1f")
-    if st.button("確認扣款", use_container_width=True):
-        # 這裡會提醒你去 Google Sheets 手動更新或查看
-        st.info(f"請到 Google 試算表將 {user} 的餘額減去 {amount}")
-        st.warning("提示：目前的簡易部署版建議搭配 Google Sheets App 直接修改數字，網站會即時同步！")
+    u1 = st.selectbox("選擇扣款人", df["姓名"].tolist(), key="pay_user")
+    amt1 = st.number_input("扣除金額", min_value=0.0, step=0.1, key="pay_amt")
+    if st.button("確認扣款"):
+        # 計算新餘額並更新 DataFrame
+        df.loc[df["姓名"] == u1, "餘額"] -= amt1
+        conn.update(data=df) # 寫回 Google Sheets
+        st.success(f"✅ 扣款成功！{u1} 的新餘額已存入雲端。")
+        st.balloons()
 
 with tab2:
-    st.write("請直接打開手機的 Google Sheets APP 進行儲值，本網頁會自動更新顯示。")
-    st.link_button("打開我的 Google 試算表", SHEET_URL)
+    u2 = st.selectbox("選擇儲值對象", df["姓名"].tolist(), key="add_user")
+    amt2 = st.number_input("儲值金額", min_value=0.0, step=10.0, key="add_amt")
+    if st.button("確認儲值"):
+        # 計算新餘額並更新 DataFrame
+        df.loc[df["姓名"] == u2, "餘額"] += amt2
+        conn.update(data=df) # 寫回 Google Sheets
+        st.success(f"💰 儲值成功！雲端資料已更新。")
+        st.snow()
 
 st.divider()
-st.caption("註：目前為了安全性與簡便性，建議直接在 Google Sheets 修改數字，本網站負責展示與計算。")
+st.info("提示：若餘額沒有即時更新，請手動重新整理網頁。")
