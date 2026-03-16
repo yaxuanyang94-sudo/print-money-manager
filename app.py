@@ -5,9 +5,9 @@ from datetime import datetime
 # --- 設定區 ---
 # 1. 這裡填入你的 Google 試算表 CSV 下載連結
 # (試算表點「檔案」>「共用」>「發佈到網路」> 選擇「整個文件」和「CSV」)
-CSV_URL = "這裡填入你發佈的CSV連結"
+CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSum58yVAkFdh7baIrQ0PnrYys2FnSp4xGbG-oiAILDztPH6MDEtc4-q2fiijT3hO4PfvhUOjcaHkF5/pub?output=csv"
 # 2. 這裡填入你的 Google 試算表網址，方便點擊去手動改錢
-SHEET_URL = "這裡填入你的試算表網址"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1ueZBzNShwS-szB7zUU2bAeEp7v2X2ZQszm2FqYJA6fE/edit?usp=sharing"
 
 st.set_page_config(page_title="列印金庫-穩定版", layout="centered")
 st.title("🖨️ 列印金庫")
