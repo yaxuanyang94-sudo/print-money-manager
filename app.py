@@ -9,7 +9,7 @@ st.title("🖨️ 列印金庫管理")
 # 初始化資料 (如果網頁重啟會恢復成這些數字)
 if 'data' not in st.session_state:
     st.session_state.data = {
-        "你": 0,
+        "楊雅絢": 0,
         "顏子庭": 0,
         "吳郁姍": 0
     }
