@@ -5,7 +5,7 @@ from datetime import datetime
 
 # --- 設定區 ---
 # 1. 之前那個 CSV 下載網址
-CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSum58yVAkFdh7baIrQ0PnrYys2FnSp4xGbG-oiAILDztPH6MDEtc4-q2fiijT3hO4PfvhUOjcaHkF5/pubhtml" 
+CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSum58yVAkFdh7baIrQ0PnrYys2FnSp4xGbG-oiAILDztPH6MDEtc4-q2fiijT3hO4PfvhUOjcaHkF5/pub?output=csv" 
 # 2. 剛剛拿到的 Apps Script 網址
 GAS_URL = "https://script.google.com/macros/s/AKfycbwxxuK_AHNNVU6_TbTXDGwvv44P7LrHkNpQjbxqxzRpOoEGwW4u0m9sbWwvllvH7Vc6/exec"
 
