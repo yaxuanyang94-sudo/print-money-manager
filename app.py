@@ -27,15 +27,19 @@ for i, r in df.iterrows():
 # 處理寫入的函數
 def update_balance(name, amount):
     try:
-        response = requests.get(f"{GAS_URL}?name={name}&amount={amount}")
-        if response.text == "Success":
-            st.success(f"✅ 更新成功！{name} 的餘額已同步雲端。")
-            st.balloons()
-            st.rerun() # 重新整理網頁看到新餘額
+        # 強制加上隨機參數，叫 Google 不要拿舊資料騙我
+        test_url = f"{GAS_URL}?name={name}&amount={amount}&t={datetime.now().timestamp()}"
+        response = requests.get(test_url)
+        
+        if "Success" in response.text:
+            st.success(f"✅ 成功！雲端已更新。")
+            # 這裡多加一個動作：強制重新讀取
+            st.cache_data.clear() 
+            st.rerun() 
         else:
-            st.error("❌ 更新失敗，找不到該使用者。")
-    except:
-        st.error("❌ 連線到雲端時發生錯誤。")
+            st.error(f"❌ 失敗：{response.text}")
+    except Exception as e:
+        st.error(f"❌ 連線異常：{e}")
 
 # 主畫面
 tab1, tab2 = st.tabs(["📉 扣款", "💰 儲值"])
