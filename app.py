@@ -2,62 +2,47 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-# 基本網頁設定
-st.set_page_config(page_title="列印餘額管理系統", layout="centered")
-st.title("🖨️ 列印金庫管理")
+# --- 設定區 ---
+# 請在這裡貼上你的 Google 試算表網址
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1ueZBzNShwS-szB7zUU2bAeEp7v2X2ZQszm2FqYJA6fE/edit?usp=sharing"
+# 將網址轉換為 CSV 下載格式
+CSV_URL = SHEET_URL.replace("/edit?usp=sharing", "/export?format=csv").replace("/edit#gid=0", "/export?format=csv")
 
-# 初始化資料 (如果網頁重啟會恢復成這些數字)
-if 'data' not in st.session_state:
-    st.session_state.data = {
-        "楊雅絢": 0,
-        "顏子庭": 0,
-        "吳郁姍": 0
-    }
-if 'history' not in st.session_state:
-    st.session_state.history = []
+st.set_page_config(page_title="列印金庫-永久儲存版", layout="centered")
+st.title("🖨️ 列印金庫 (資料已連動)")
+
+# 從 Google Sheets 讀取資料
+def load_data():
+    try:
+        # 加上 timestamp 防止快取
+        df = pd.read_csv(f"{CSV_URL}&t={datetime.now().timestamp()}")
+        return df
+    except:
+        st.error("讀取資料失敗，請檢查試算表權限是否已開啟「編輯者」給任何人。")
+        return pd.DataFrame(columns=["姓名", "餘額"])
+
+df = load_data()
 
 # --- 側邊欄：即時餘額顯示 ---
 st.sidebar.header("💰 目前餘額")
-for name, balance in st.session_state.data.items():
-    st.sidebar.metric(label=name, value=f"${balance:.1f}")
+if not df.empty:
+    for index, row in df.iterrows():
+        st.sidebar.metric(label=row["姓名"], value=f"${row['餘額']:.1f}")
 
-# --- 主畫面：功能切換 ---
-tab1, tab2 = st.tabs(["📉 扣款 (列印紀錄)", "💰 儲值 (加錢)"])
+# --- 主畫面 ---
+tab1, tab2 = st.tabs(["📉 扣款", "💰 儲值"])
 
-# 頁籤 1：扣款
 with tab1:
-    st.subheader("新增列印扣款")
-    u1 = st.selectbox("選擇扣款人", list(st.session_state.data.keys()), key="user_pay")
-    amt1 = st.number_input("扣除金額", min_value=0.0, step=0.1, format="%.1f", key="pay_amt")
-    note1 = st.text_input("扣款備註", placeholder="例：印電子學結報", key="pay_note")
-    
+    user = st.selectbox("選擇扣款人", df["姓名"].tolist() if not df.empty else [])
+    amount = st.number_input("扣除金額", min_value=0.0, step=0.1, format="%.1f")
     if st.button("確認扣款", use_container_width=True):
-        if st.session_state.data[u1] >= amt1:
-            st.session_state.data[u1] -= amt1
-            log = {"時間": datetime.now().strftime("%m-%d %H:%M"), "使用者": u1, "動作": "扣款", "金額": f"-{amt1}", "備註": note1}
-            st.session_state.history.insert(0, log)
-            st.success(f"✅ 扣款成功！{u1} 剩餘 ${st.session_state.data[u1]:.1f}")
-            st.balloons()
-        else:
-            st.error("錢不夠啦！快去儲值。")
+        # 這裡會提醒你去 Google Sheets 手動更新或查看
+        st.info(f"請到 Google 試算表將 {user} 的餘額減去 {amount}")
+        st.warning("提示：目前的簡易部署版建議搭配 Google Sheets App 直接修改數字，網站會即時同步！")
 
-# 頁籤 2：儲值
 with tab2:
-    st.subheader("餘額儲值")
-    u2 = st.selectbox("選擇儲值對象", list(st.session_state.data.keys()), key="user_add")
-    amt2 = st.number_input("儲值金額", min_value=0.0, step=10.0, format="%.1f", key="add_amt")
-    
-    if st.button("確認儲值", use_container_width=True):
-        st.session_state.data[u2] += amt2
-        log = {"時間": datetime.now().strftime("%m-%d %H:%M"), "使用者": u2, "動作": "儲值", "金額": f"+{amt2}", "備註": "手動儲值"}
-        st.session_state.history.insert(0, log)
-        st.success(f"💰 儲值成功！{u2} 目前餘額為 ${st.session_state.data[u2]:.1f}")
-        st.snow()
+    st.write("請直接打開手機的 Google Sheets APP 進行儲值，本網頁會自動更新顯示。")
+    st.link_button("打開我的 Google 試算表", SHEET_URL)
 
-# --- 歷史紀錄顯示 ---
 st.divider()
-st.subheader("📋 最近交易紀錄")
-if st.session_state.history:
-    st.table(pd.DataFrame(st.session_state.history).head(10))
-else:
-    st.info("目前還沒有任何紀錄。")
+st.caption("註：目前為了安全性與簡便性，建議直接在 Google Sheets 修改數字，本網站負責展示與計算。")
