@@ -1,43 +1,36 @@
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
 import pandas as pd
+from datetime import datetime
 
-st.set_page_config(page_title="列印金庫-全自動版", layout="centered")
-st.title("🖨️ 列印金庫 (一鍵存檔)")
+# --- 設定區 ---
+# 1. 這裡填入你的 Google 試算表 CSV 下載連結
+# (試算表點「檔案」>「共用」>「發佈到網路」> 選擇「整個文件」和「CSV」)
+CSV_URL = "這裡填入你發佈的CSV連結"
+# 2. 這裡填入你的 Google 試算表網址，方便點擊去手動改錢
+SHEET_URL = "這裡填入你的試算表網址"
 
-# 建立 Google Sheets 連線
-conn = st.connection("gsheets", type=GSheetsConnection)
+st.set_page_config(page_title="列印金庫-穩定版", layout="centered")
+st.title("🖨️ 列印金庫")
 
-# 讀取現有資料
-df = conn.read(ttl="0s") # ttl=0s 確保每次都讀最新資料
+# 讀取資料
+def load_data():
+    return pd.read_csv(f"{CSV_URL}&t={datetime.now().timestamp()}")
 
-# --- 側邊欄：顯示餘額 ---
+df = load_data()
+
 st.sidebar.header("💰 目前餘額")
-for index, row in df.iterrows():
-    st.sidebar.metric(label=row["姓名"], value=f"${row['餘額']:.1f}")
+for i, r in df.iterrows():
+    st.sidebar.metric(label=r["姓名"], value=f"${r['餘額']:.1f}")
 
-# --- 主畫面 ---
 tab1, tab2 = st.tabs(["📉 扣款", "💰 儲值"])
 
 with tab1:
-    u1 = st.selectbox("選擇扣款人", df["姓名"].tolist(), key="pay_user")
-    amt1 = st.number_input("扣除金額", min_value=0.0, step=0.1, key="pay_amt")
-    if st.button("確認扣款"):
-        # 計算新餘額並更新 DataFrame
-        df.loc[df["姓名"] == u1, "餘額"] -= amt1
-        conn.update(data=df) # 寫回 Google Sheets
-        st.success(f"✅ 扣款成功！{u1} 的新餘額已存入雲端。")
-        st.balloons()
+    u = st.selectbox("選擇扣款人", df["姓名"].tolist())
+    amt = st.number_input("金額", min_value=0.0, step=0.1)
+    if st.button("確認"):
+        st.success(f"已記錄！請點下方連結進入試算表，將 {u} 的餘額改為 {df.loc[df['姓名']==u, '餘額'].values[0] - amt}")
+        st.link_button("打開試算表動手改錢", SHEET_URL)
 
 with tab2:
-    u2 = st.selectbox("選擇儲值對象", df["姓名"].tolist(), key="add_user")
-    amt2 = st.number_input("儲值金額", min_value=0.0, step=10.0, key="add_amt")
-    if st.button("確認儲值"):
-        # 計算新餘額並更新 DataFrame
-        df.loc[df["姓名"] == u2, "餘額"] += amt2
-        conn.update(data=df) # 寫回 Google Sheets
-        st.success(f"💰 儲值成功！雲端資料已更新。")
-        st.snow()
-
-st.divider()
-st.info("提示：若餘額沒有即時更新，請手動重新整理網頁。")
+    st.info("儲值請直接點擊下方按鈕，在 Excel 裡修改數字即可同步！")
+    st.link_button("打開試算表去加錢", SHEET_URL)
