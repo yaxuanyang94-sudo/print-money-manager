@@ -29,7 +29,7 @@ with tab1:
     st.subheader("新增列印扣款")
     u1 = st.selectbox("選擇扣款人", list(st.session_state.data.keys()), key="user_pay")
     amt1 = st.number_input("扣除金額", min_value=0.0, step=0.1, format="%.1f", key="pay_amt")
-    note1 = st.text_input("扣款備註", placeholder="例：印電磁學講義", key="pay_note")
+    note1 = st.text_input("扣款備註", placeholder="例：印電子學結報", key="pay_note")
     
     if st.button("確認扣款", use_container_width=True):
         if st.session_state.data[u1] >= amt1:
